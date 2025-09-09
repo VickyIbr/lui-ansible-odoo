@@ -1,0 +1,39 @@
+- name: Map Odoo version to required Python version
+  set_fact:
+    python_by_odoo:
+      "14": "3.7"
+      "15": "3.8"
+      "16": "3.10"
+      "17": "3.10"
+      "18": "3.12"
+
+- name: Set Python version based on selected Odoo version
+  set_fact:
+    python_version: "{{ python_by_odoo[odoo_version] }}"
+
+- name: Check if python{{ python_version }} is available
+  command: "python{{ python_version }} --version"
+  register: python_check
+  ignore_errors: true
+
+- name: Add deadsnakes repo (if missing)
+  apt_repository:
+    repo: "ppa:deadsnakes/ppa"
+    state: present
+  when: python_check.rc != 0
+
+- name: Install python{{ python_version }} and venv tools
+  apt:
+    name:
+      - "python{{ python_version }}"
+      - "python{{ python_version }}-venv"
+      - "python{{ python_version }}-dev"
+    state: present
+    update_cache: yes
+
+- name: Install python distutils (only for <3.10)
+  apt:
+    name: "python{{ python_version }}-distutils"
+    state: present
+  when: python_version is version('3.10', '<')
+

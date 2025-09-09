@@ -1,0 +1,33 @@
+---
+- name: Update, upgrade, autoremove, and clean APT cache
+  apt:
+    update_cache: yes
+    upgrade: dist
+    autoremove: yes
+    purge: yes
+    autoclean: yes
+
+
+- name: Install Odoo system dependencies
+  apt:
+    name:
+      - acl
+      - python3-dev
+      - python3-pip
+      - libxml2-dev
+      - libxslt1-dev
+      - zlib1g-dev
+      - libsasl2-dev
+      - libldap2-dev
+      - build-essential
+      - libssl-dev
+      - libffi-dev
+      - libmysqlclient-dev
+      - libjpeg-dev
+      - libpq-dev
+      - libjpeg8-dev
+      - liblcms2-dev
+      - libblas-dev
+      - libatlas-base-dev
+    state: present
+    update_cache: yes

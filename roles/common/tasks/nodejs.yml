@@ -1,0 +1,34 @@
+---
+- name: Install Node.js (latest LTS) via NVM
+  shell: |
+    export NVM_DIR="/usr/local/nvm"
+    if [ ! -d "$NVM_DIR" ]; then
+      mkdir -p "$NVM_DIR"
+      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+    fi
+    source "$NVM_DIR/nvm.sh"
+    nvm install --lts
+    nvm alias default 'lts/*'
+  args:
+    executable: /bin/bash
+  environment:
+    PROFILE: /etc/profile.d/nvm.sh
+  become: true
+
+- name: Get actual installed LTS Node.js version
+  shell: |
+    source /usr/local/nvm/nvm.sh && nvm version lts/*
+  args:
+    executable: /bin/bash
+  register: node_lts_version
+  changed_when: false
+
+- name: Create symlinks for node and npm
+  file:
+    src: "/usr/local/nvm/versions/node/{{ node_lts_version.stdout }}/bin/{{ item }}"
+    dest: "/usr/bin/{{ item }}"
+    state: link
+    force: true
+  loop:
+    - node
+    - npm

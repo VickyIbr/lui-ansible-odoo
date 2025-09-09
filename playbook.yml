@@ -1,0 +1,38 @@
+---
+- name: Install odoo
+  hosts: target_hosts
+  become: yes
+  gather_facts: yes
+
+  vars_prompt:
+    - name: odoo_version
+      prompt: "Enter Odoo version (14-18)"
+      private: no
+      default: "18"
+
+    - name: odoo_install_type
+      prompt: "Install Odoo type (community/enterprise)"
+      private: no
+      default: "community"
+
+    - name: odoo_source
+      prompt: "Source for Odoo (github_official/github_custom/zip)"
+      private: no
+      default: "github_official"
+
+    - name: odoo_enterprise_source
+      prompt: "Source for Odoo Enterprise (skip if community) [github_official/github_custom/zip/none]"
+      private: no
+      default: "none"
+
+    - name: enterprise_user_token
+      prompt: "Enter your Odoo Enterprise GitHub token (leave empty if not enterprise+github_official)"
+      private: yes
+      default: ""
+
+  roles:
+    - common
+    - postgersql
+    - python
+    - odoo
+    - summary

@@ -1,0 +1,213 @@
+---
+- name: Create odoo Group
+  group:
+    name: "{{ odoo_user }}"
+    system: yes
+
+- name: Create odoo User
+  user:
+    name: "{{ odoo_user }}"
+    group: "{{ odoo_user }}"
+    home: "{{ odoo_home_path }}"
+    system: yes
+    shell: /bin/bash
+    createhome: yes
+
+- name: Create log directory
+  file:
+    path: "/var/log/odoo/{{ odoo_user }}"
+    state: directory
+    owner: "{{ odoo_user }}"
+    mode: 0755
+
+- name: Ensure Odoo home exists
+  file:
+    path: "{{ odoo_home_path }}"
+    state: directory
+    owner: "{{ odoo_user }}"
+    group: "{{ odoo_user }}"
+    mode: "0755"
+  become: true
+
+- name: Create destination directory for Odoo
+  file:
+    path: "{{ odoo_home_path }}/odoo"
+    state: directory
+    owner: "{{ odoo_user }}"
+    group: "{{ odoo_user }}"
+    mode: "0755"
+  become: yes
+  become_user: "{{ odoo_user }}"
+
+- name: Install Odoo from Github official
+  git:
+    repo: "https://github.com/odoo/odoo.git"
+    version: "{{ odoo_version }}.0"
+    dest: "{{ odoo_home_path }}/odoo"
+    depth: 1
+    force: yes
+  become: yes
+  become_user: "{{ odoo_user }}"
+  when: odoo_source == "github_official"
+
+- name: Install Odoo from Github custom
+  git:
+    repo: "{{ custom_repo_url }}"
+    version: "{{ odoo_version }}.0"
+    dest: "{{ odoo_home_path }}/odoo"
+    depth: 1
+    force: yes
+  become: yes
+  become_user: "{{ odoo_user }}"
+  when: odoo_source == "github_custom"
+
+- name: Install Odoo from local Zip
+  unarchive:
+    src: "files/odoo{{ odoo_version }}.zip"
+    dest: "{{ odoo_home_path }}/odoo"
+    remote_src: no
+  become: yes
+  become_user: "{{ odoo_user }}"
+  when: odoo_source == "zip"
+
+- name: Create destination directory for Odoo
+  file:
+    path: "{{ odoo_home_path }}/enterprise"
+    state: directory
+    owner: "{{ odoo_user }}"
+    group: "{{ odoo_user }}"
+    mode: "0755"
+  become: yes
+  become_user: "{{ odoo_user }}"
+  when:
+    - odoo_install_type == "enterprise"
+
+- name: Install Odoo Enterprise from Github official
+  git:
+    repo: "https://{{ enterprise_user_token }}@github.com/odoo/enterprise.git"
+    version: "{{ odoo_version }}.0"
+    dest: "{{ odoo_home_path }}/enterprise"
+    depth: 1
+  become: yes
+  become_user: "{{ odoo_user }}"
+  when:
+    - odoo_install_type == "enterprise"
+    - odoo_enterprise_source == "github_official"
+    - enterprise_user_token is defined
+    - enterprise_user_token | length > 0
+
+- name: Install Odoo Enterprise from Github custom
+  git:
+    repo: "{{ enterprise_custom_repo_url }}"
+    version: "{{ odoo_version }}.0"
+    dest: "{{ odoo_home_path }}/enterprise"
+    depth: 1
+  become: yes
+  become_user: "{{ odoo_user }}"
+  when: odoo_install_type == "enterprise" and odoo_enterprise_source == "github_custom"
+
+- name: Install Odoo Enterprise from local Zip
+  unarchive:
+    src: "files/enterprise{{ odoo_version }}.zip"
+    dest: "{{ odoo_home_path }}/enterprise"
+    remote_src: no
+  become: yes
+  become_user: "{{ odoo_user }}"
+  when: odoo_install_type == "enterprise" and odoo_enterprise_source == "zip"
+
+- name: Ensure venv directory exists
+  file:
+    path: "{{ python_venv_path }}"
+    state: directory
+    owner: "{{ odoo_user }}"
+    group: "{{ odoo_user }}"
+    mode: "0755"
+
+- name: Create virtual environment with python{{ python_version }}
+  command: "python{{ python_version }} -m venv {{ python_venv_path }}"
+  args:
+    creates: "{{ python_venv_path }}/bin/activate"
+  become_user: "{{ odoo_user }}"
+
+- name: Upgrade pip in virtual environment
+  pip:
+    name:
+      - pip
+      - setuptools
+      - wheel
+      - six
+    state: latest
+    virtualenv: "{{ python_venv_path }}"
+  become: yes
+  become_user: "{{ odoo_user }}"
+
+- name: Install odoo requirements
+  pip:
+    requirements: "{{ odoo_home_path }}/odoo/requirements.txt"
+    state: present
+    virtualenv: "{{ python_venv_path }}"
+  become: yes
+  become_user: "{{ odoo_user }}"
+  retries: 3
+  delay: 10
+  register: pip_result
+  until: pip_result is succeeded
+
+# - name: Get Ubuntu version
+#   command: lsb_release -sr
+#   register: ubuntu_version
+#   changed_when: false
+
+# - name: Install Odoo Python dependencies (auto match Ubuntu version)
+#   pip:
+#     name: >-
+#       {{
+#         (
+#           ubuntu_version.stdout is search("20.04")
+#           | ternary(
+#               ["gevent==20.12.1", "greenlet==1.1.3", "cryptography==3.4.8", "pyopenssl==22.0.0"],
+#               ubuntu_version.stdout is search("22.04")
+#               | ternary(
+#                   ["gevent==22.10.2", "greenlet==2.0.2", "cryptography==38.0.4", "pyopenssl==23.2.0"],
+#                   ["gevent==24.2.1", "greenlet==3.0.3", "cryptography==42.0.5", "pyopenssl==24.2.1"]
+#                 )
+#             )
+#         )
+#       }}
+#     virtualenv: "{{ odoo_home_path }}/odoo-venv"
+#   vars:
+#     odoo_version: "{{ odoo_version }}"
+#   register: pip_result
+
+- name: Create odoo custom addons
+  file:
+    name: "{{ odoo_home_path }}/custom-addons"
+    state: directory
+    owner: "{{ odoo_user }}"
+    group: "{{ odoo_user }}"
+    mode: 0755
+  become: yes
+  become_user: "{{ odoo_user }}"
+
+- name: Create odoo config file
+  template:
+    src: odoo.conf.j2
+    dest: "/etc/{{ odoo_user }}.conf"
+    owner: "{{ odoo_user }}"
+    group: "{{ odoo_user }}"
+    mode: 0640
+
+- name: Create odoo service file
+  template:
+    src: odoo.service.j2
+    dest: "/etc/systemd/system/{{ odoo_user }}.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - Restart service
+
+- meta: flush_handlers
+
+- name: Install wkhtmltopdf and dependencies
+  include_tasks: install_wkhtmltopdf.yml

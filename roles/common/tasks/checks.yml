@@ -1,0 +1,14 @@
+---
+- name: Show system architecture and OS version
+  debug:
+    msg: "Running on {{ ansible_distribution }} {{ ansible_distribution_version }} (arch: {{ ansible_architecture }})"
+
+- name: Fail if unsupported architecture
+  fail:
+    msg: "Unsupported architecture: {{ ansible_architecture }}"
+  when: ansible_architecture not in ['x86_64', 'amd64', 'arm64', 'ppc64le']
+
+- name: Warn if Ubuntu version is too new
+  debug:
+    msg: "WARNING: Ubuntu {{ ansible_distribution_version }} is newer than tested versions."
+  when: ansible_distribution_version is version('24.04', '>')

@@ -1,0 +1,35 @@
+- name: Show list of hosts in this play
+  debug:
+    msg: |
+      Hosts that ran this play:
+      {% for host in ansible_play_hosts %}
+      - {{ host }}
+      {% endfor %}
+  when: inventory_hostname == ansible_play_hosts[0]
+
+- name: Show Odoo installation summary (formatted cleanly)
+  debug:
+    msg: "{{ summary_lines | join('\n') }}"
+  vars:
+    summary_lines:
+      - ""
+      - "┌───────────────────────────────────────────────┐"
+      - "│           ODOO INSTALLATION SUMMARY           │"
+      - "└───────────────────────────────────────────────┘"
+      - "▸ Odoo Version         : {{ odoo_version }}"
+      - "▸ Install Type         : {{ odoo_install_type }}"
+      - "▸ Odoo Source          : {{ odoo_source }}"
+      - "▸ Enterprise Source    : {{ odoo_enterprise_source }}"
+      - "▸ GitHub Token Supplied: {{ 'Yes' if (enterprise_user_token | default('')) | length > 0 else 'No' }}"
+      - ""
+      - "▸ Odoo System User     : {{ odoo_user }}"
+      - "▸ Odoo Home Path       : {{ odoo_home_path }}"
+      - "▸ Python Venv Path     : {{ python_venv_path }}"
+      - ""
+      - "▸ HTTP Port            : {{ odoo_port }}"
+      - "▸ Longpolling Port     : {{ longpolling_port }}"
+      - ""
+      - "▸ PostgreSQL Host      : {{ postgres_host }}"
+      - "▸ PostgreSQL Port      : {{ postgres_port }}"
+      - "▸ PostgreSQL User      : {{ postgres_user }}"
+  when: inventory_hostname == ansible_play_hosts[0]

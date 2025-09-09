@@ -1,0 +1,4 @@
+- name: Restart service
+  systemd:
+    name: "{{ odoo_user }}"
+    state: restarted

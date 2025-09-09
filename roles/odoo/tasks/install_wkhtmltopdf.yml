@@ -1,0 +1,17 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  register: apt_update
+  changed_when: false
+
+- name: Check if wkhtmltopdf is available in APT
+  command: apt-cache policy wkhtmltopdf
+  register: wkhtmltopdf_check
+  changed_when: false
+  failed_when: false
+
+- name: Install wkhtmltopdf if available
+  apt:
+    name: wkhtmltopdf
+    state: present
+  when: "'Candidate:' in wkhtmltopdf_check.stdout and 'none' not in wkhtmltopdf_check.stdout"

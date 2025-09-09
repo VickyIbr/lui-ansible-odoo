@@ -1,0 +1,22 @@
+---
+
+
+
+# =============================================================================
+# Common
+# =============================================================================
+# For Ubuntu User
+odoo_user: "odoo" 
+odoo_home_path: "/opt/odoo"
+python_venv_path: "{{ odoo_home_path }}/odoo/venv"
+odoo_port: 8069
+longpolling_port: 8072
+odoo_master_password: ""
+
+# =============================================================================
+# Postgress
+# =============================================================================
+postgres_host: localhost
+postgres_port: 5432
+postgres_user: odoo
+postgres_password: odoo

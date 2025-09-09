@@ -1,0 +1,35 @@
+# Ignore Docker-related files
+docker-compose.yml
+Dockerfile
+
+# Ignore inventory file and inventory folder
+inventory.ini
+inventory/
+
+files/
+files/*
+
+# Ansible artifacts
+*.retry
+ansible.log
+
+# SSH keys (for safety)
+*.pem
+*.pub
+.ssh/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Virtual environment folders
+.env/
+.venv/
+venv/
+
+# Editor/OS junk files
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

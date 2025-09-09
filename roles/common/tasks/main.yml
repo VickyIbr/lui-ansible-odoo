@@ -1,0 +1,12 @@
+---
+- name: Pre-flight checks
+  import_tasks: checks.yml
+
+- name: Install basic system packages
+  import_tasks: packages.yml
+
+- name: Install and configure Fail2Ban
+  import_tasks: fail2ban.yml
+
+- name: Install Node.js and npm (portable)
+  import_tasks: nodejs.yml
