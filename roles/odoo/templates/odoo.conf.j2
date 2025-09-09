@@ -10,11 +10,4 @@ addons_path = {{ ([odoo_home_path + '/odoo/addons'] + ([odoo_home_path + '/enter
 xmlrpc_port = {{ odoo_port }}
 longpolling_port = {{ longpolling_port }}
 
-logfile = /var/log/odoo.log
-
-limit_memory_hard = 4026531840
-limit_memory_soft = 3355443200
-limit_request = 8192
-limit_time_cpu = 600
-limit_time_real = 1200
-workers = 5
+logfile = /var/log/odoo/{{odoo_user}}.log

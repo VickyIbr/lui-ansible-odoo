@@ -11,6 +11,9 @@ User={{ odoo_user }}
 Group={{ odoo_user }}
 ExecStart={{ python_venv_path }}/bin/python3 {{odoo_home_path}}/odoo/odoo-bin -c /etc/{{ odoo_user}}.conf
 StandardOutput=journal+console
+WorkingDirectory={{ odoo_home_path }}/
+Environment="PYTHONPATH={{ python_venv_path }}/lib/python{{python_version}/site-packages"
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
